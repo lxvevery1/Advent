@@ -119,23 +119,30 @@ int** get_plan_requirments(char** _input, int _line_count) {
     uint atoi_me = 0;
     bool should_saparate = true;
 
-    for (size_t j = 0; j < strlen(_input[0]) - 1; j++) {
-        if (_input[0][j] != 'x') {
-            if (should_saparate) {
-                atoi_me = atoi(&_input[0][j]);
-                printf("\n\t%zu:%d %d -> separate!", j, line_x_count, atoi_me);
-                should_saparate = false;
+    for (size_t i = 0; i < _line_count; i++) {
+        for (size_t j = 0; j < strlen(_input[i]) - 1; j++) {
+            if (_input[i][j] != 'x') {
+                if (should_saparate) {
+                    atoi_me = atoi(&_input[i][j]);
+                    // printf("\n\t%zu:%d %d -> separate!", j, line_x_count,
+                    //        atoi_me);
+                    should_saparate = false;
+                }
+                // printf("\n %zu:%d -> input: %d", j, line_x_count,
+                //        atoi(&_input[i][j]));
+            } else {
+                // printf("\n\t%zu:%d -> x detected", j, line_x_count);
+                should_saparate = true;
+                line_x_count++;
             }
-            printf("\n %zu:%d -> input: %d", j, line_x_count,
-                   atoi(&_input[0][j]));
-        } else {
-            printf("\n\t%zu:%d -> x detected", j, line_x_count);
-            should_saparate = true;
-            line_x_count++;
-        }
-        line_x_count = 0;
 
-        plan_line[line_x_count] = atoi_me;
+            plan_line[line_x_count] = atoi_me;
+        }
+        should_saparate = true;
+        line_x_count = 0;
+        printf("\n%d, ", plan_line[0]);
+        printf("%d, ", plan_line[1]);
+        printf("%d", plan_line[2]);
     }
 
     return requirments;
