@@ -157,9 +157,9 @@ int find_plan_min_element(int* _plan) {
 int calc_required_wrapping_paper(int* _plan) {
     int my_min = 0;
 
-    int x1 = (_plan[0] + _plan[1]);
-    int x2 = (_plan[1] + _plan[2]);
-    int x3 = (_plan[0] + _plan[2]);
+    int x1 = (_plan[0] * _plan[1]);
+    int x2 = (_plan[1] * _plan[2]);
+    int x3 = (_plan[0] * _plan[2]);
 
     int array_x[NUM_NUMBERS_PER_LINE] = {x1, x2, x3};
     int result = 0;
@@ -168,7 +168,7 @@ int calc_required_wrapping_paper(int* _plan) {
 
     result = (2 * x1) + (2 * x2) + (2 * x3) + my_min;
 
-    printf("%d, %d, %d,   %d -> %d\n", x1, x2, x3, my_min, result);
+    printf("%d, %d, %d, min %d -> %d\n", x1, x2, x3, my_min, result);
 
     return result;
 }
@@ -193,9 +193,10 @@ int main() {
     int** requirments = get_plan_requirments(file_content, line_count);
     int total_sum = 0;
 
-    print_2d_int_array(requirments, line_count, NUM_NUMBERS_PER_LINE);
+    // print_2d_int_array(requirments, line_count, NUM_NUMBERS_PER_LINE);
 
     for (int i = 0; i < line_count; i++) {
+        printf("[%d] ", i);
         total_sum += calc_required_wrapping_paper(requirments[i]);
     }
 
