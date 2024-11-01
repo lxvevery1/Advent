@@ -100,38 +100,27 @@ int** get_plan_requirments(char** _input, int _line_count) {
     requirments = (int**)malloc(sizeof(int*) * _line_count);
 
     int* plan_line;
-    char* present_line;
-
-    // -2 because there only 2 'x' characters at line
-    plan_line = malloc((strlen(_input[0]) - 2) * sizeof(int));
-    if (plan_line == NULL) {
-        perror("Plan line memory allocating error");
-        return NULL;
-    }
-
-    present_line = malloc(strlen(_input[0]) * sizeof(char));
-    if (present_line == NULL) {
-        perror("Present line memory allocating error");
-        return NULL;
-    }
 
     uint line_x_count = 0;
     uint atoi_me = 0;
     bool should_saparate = true;
 
     for (size_t i = 0; i < _line_count; i++) {
+        // allocate every line memory for this
+        // -2 because there only 2 'x' characters at line
+        plan_line = malloc((strlen(_input[0]) - 2) * sizeof(int));
+        if (plan_line == NULL) {
+            perror("Plan line memory allocating error");
+            return NULL;
+        }
+
         for (size_t j = 0; j < strlen(_input[i]) - 1; j++) {
             if (_input[i][j] != 'x') {
                 if (should_saparate) {
                     atoi_me = atoi(&_input[i][j]);
-                    // printf("\n\t%zu:%d %d -> separate!", j, line_x_count,
-                    //        atoi_me);
                     should_saparate = false;
                 }
-                // printf("\n %zu:%d -> input: %d", j, line_x_count,
-                //        atoi(&_input[i][j]));
             } else {
-                // printf("\n\t%zu:%d -> x detected", j, line_x_count);
                 should_saparate = true;
                 line_x_count++;
             }
@@ -140,12 +129,23 @@ int** get_plan_requirments(char** _input, int _line_count) {
         }
         should_saparate = true;
         line_x_count = 0;
-        printf("\n%d, ", plan_line[0]);
-        printf("%d, ", plan_line[1]);
-        printf("%d", plan_line[2]);
+
+        requirments[i] = plan_line;
     }
 
     return requirments;
+}
+
+void print_2d_int_array(int** _array, int _line_count, int _col_count) {
+    if (_array == NULL)
+        return;
+
+    for (int i = 0; i < _line_count; i++) {
+        for (int j = 0; j < _col_count; j++) {
+            printf("%d, ", _array[i][j]);
+        }
+        putchar('\n');
+    }
 }
 
 int main() {
@@ -153,6 +153,8 @@ int main() {
     int line_count = 0;
     char** file_content = get_file_content(file_path, &line_count);
     int** requirments = get_plan_requirments(file_content, line_count);
+
+    print_2d_int_array(requirments, line_count, 3);
 
     // if (file_content != NULL) {
     //     for (int i = 0; i < line_count; i++) {
