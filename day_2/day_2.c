@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define NUM_NUMBERS_PER_LINE 3
+
 char** get_file_content(const char* _file_path, int* _line_count) {
     FILE* fp = fopen(_file_path, "r");
     if (fp == NULL) {
@@ -94,7 +96,7 @@ char** get_file_content(const char* _file_path, int* _line_count) {
 // Example:
 //      '4x23x21'
 //      to
-//      [2*(4*23), 2*(23*21), 2*(4*21)]
+//      [4, 23, 21]
 int** get_plan_requirments(char** _input, int _line_count) {
     int** requirments;
     requirments = (int**)malloc(sizeof(int*) * _line_count);
@@ -108,7 +110,7 @@ int** get_plan_requirments(char** _input, int _line_count) {
     for (size_t i = 0; i < _line_count; i++) {
         // allocate every line memory for this
         // -2 because there only 2 'x' characters at line
-        plan_line = malloc((strlen(_input[0]) - 2) * sizeof(int));
+        plan_line = malloc(NUM_NUMBERS_PER_LINE * sizeof(int));
         if (plan_line == NULL) {
             perror("Plan line memory allocating error");
             return NULL;
@@ -136,6 +138,41 @@ int** get_plan_requirments(char** _input, int _line_count) {
     return requirments;
 }
 
+int find_plan_min_element(int* _plan) {
+    int minimal = _plan[0];
+    for (int i = 1; i < NUM_NUMBERS_PER_LINE; i++) {
+        if (_plan[i] < minimal) {
+            minimal = _plan[i];
+        }
+    }
+
+    return minimal;
+}
+
+// Convert line from present (text data) to plan (int data)
+// Example:
+//      [4, 23, 21]
+//      to
+//      [2*(4*23), 2*(23*21), 2*(4*21)] => sum
+int calc_required_wrapping_paper(int* _plan) {
+    int my_min = 0;
+
+    int x1 = (_plan[0] + _plan[1]);
+    int x2 = (_plan[1] + _plan[2]);
+    int x3 = (_plan[0] + _plan[2]);
+
+    int array_x[NUM_NUMBERS_PER_LINE] = {x1, x2, x3};
+    int result = 0;
+
+    my_min = find_plan_min_element(array_x);
+
+    result = (2 * x1) + (2 * x2) + (2 * x3) + my_min;
+
+    printf("%d, %d, %d,   %d -> %d\n", x1, x2, x3, my_min, result);
+
+    return result;
+}
+
 void print_2d_int_array(int** _array, int _line_count, int _col_count) {
     if (_array == NULL)
         return;
@@ -150,27 +187,32 @@ void print_2d_int_array(int** _array, int _line_count, int _col_count) {
 
 int main() {
     const char* file_path = "input.txt";
+    int glob_min = 0;
     int line_count = 0;
     char** file_content = get_file_content(file_path, &line_count);
     int** requirments = get_plan_requirments(file_content, line_count);
+    int total_sum = 0;
 
-    print_2d_int_array(requirments, line_count, 3);
+    print_2d_int_array(requirments, line_count, NUM_NUMBERS_PER_LINE);
 
-    // if (file_content != NULL) {
-    //     for (int i = 0; i < line_count; i++) {
-    //         printf("%s", file_content[i]);
-    //     }
-    // }
+    for (int i = 0; i < line_count; i++) {
+        total_sum += calc_required_wrapping_paper(requirments[i]);
+    }
 
-    // if (requirments != NULL) {
-    //     printf("%d", requirments[0][1]);
-    // }
+    printf("%d", total_sum);
 
     if (file_content != NULL) {
         for (int i = 0; i < line_count; i++) {
             free(file_content[i]); // Free each line
         }
         free(file_content); // Free the array of pointers
+    }
+
+    if (requirments != NULL) {
+        for (int i = 0; i < line_count; i++) {
+            free(requirments[i]); // Free each line
+        }
+        free(requirments); // Free the array of pointers
     }
     return 0;
 }
