@@ -25,6 +25,28 @@
 // input type:
 //      l*w*h
 
+// --- Part Two ---
+//
+// The elves are also running low on ribbon. Ribbon is all the same width, so
+// they only have to worry about the length they need to order, which they would
+// again like to be exact.
+//
+// The ribbon required to wrap a present is the shortest distance around its
+// sides, or the smallest perimeter of any one face. Each present also requires
+// a bow made out of ribbon as well; the feet of ribbon required for the perfect
+// bow is equal to the cubic feet of volume of the present. Don't ask how they
+// tie the bow, though; they'll never tell.
+//
+// For example:
+//
+//     A present with dimensions 2x3x4 requires 2+2+3+3 = 10 feet of ribbon to
+//     wrap the present plus 2*3*4 = 24 feet of ribbon for the bow, for a total
+//     of 34 feet. A present with dimensions 1x1x10 requires 1+1+1+1 = 4 feet of
+//     ribbon to wrap the present plus 1*1*10 = 10 feet of ribbon for the bow,
+//     for a total of 14 feet.
+//
+// How many total feet of ribbon should they order?
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -149,7 +171,25 @@ int find_plan_min_element(int* _plan) {
     return minimal;
 }
 
-// Convert line from present (text data) to plan (int data)
+int find_plan_max_element(int* _plan) {
+    int max = _plan[0];
+    for (int i = 1; i < NUM_NUMBERS_PER_LINE; i++) {
+        if (_plan[i] > max) {
+            max = _plan[i];
+        }
+    }
+
+    return max;
+}
+
+int calc_smallest_perimater(int* _plan) {
+    int x1 = 2 * (_plan[0] + _plan[1]);
+    int x2 = 2 * (_plan[1] + _plan[2]);
+    int x3 = 2 * (_plan[0] + _plan[2]);
+
+    int array_x[NUM_NUMBERS_PER_LINE] = {x1, x2, x3};
+    return find_plan_min_element(array_x);
+}
 // Example:
 //      [4, 23, 21]
 //      to
@@ -168,7 +208,48 @@ int calc_required_wrapping_paper(int* _plan) {
 
     result = (2 * x1) + (2 * x2) + (2 * x3) + my_min;
 
-    printf("%d, %d, %d, min %d -> %d\n", x1, x2, x3, my_min, result);
+    // printf("%d, %d, %d, min %d -> %d\n", x1, x2, x3, my_min, result);
+
+    return result;
+}
+
+// Example:
+//      [4, 23, 21]
+//      to
+//      4+4+21+21 => present_ribbon
+int calc_required_wrapping_paper_present(int* _plan) {
+    int max_element_to_kick = find_plan_max_element(_plan);
+
+    int x1 = _plan[0];
+    int x2 = _plan[1];
+    int x3 = _plan[2];
+
+    int array_x[NUM_NUMBERS_PER_LINE] = {x1, x2, x3};
+
+    int result = calc_smallest_perimater(array_x);
+
+    // result = 2 * array_x[0] + 2 * array_x[1] + 2 * array_x[2];
+
+    printf("Present: %d, %d, %d -> %d\n", x1, x2, x3, result);
+
+    return result;
+}
+
+// Example:
+//      [4, 23, 21]
+//      to
+//      4*23*21 => bow_ribbon
+int calc_required_wrapping_paper_bow(int* _plan) {
+    int x1 = _plan[0];
+    int x2 = _plan[1];
+    int x3 = _plan[2];
+
+    int array_x[NUM_NUMBERS_PER_LINE] = {x1, x2, x3};
+    int result = 0;
+
+    result = x1 * x2 * x3;
+
+    printf("Bow: %d, %d, %d -> %d\n", x1, x2, x3, result);
 
     return result;
 }
@@ -185,22 +266,36 @@ void print_2d_int_array(int** _array, int _line_count, int _col_count) {
     }
 }
 
+int calc_together(int present, int bow) {
+    int result = present + bow;
+    printf(" -> Present: %d + Bow: %d -> %d\n", present, bow, result);
+    return result;
+}
+
 int main() {
     const char* file_path = "input.txt";
     int glob_min = 0;
     int line_count = 0;
     char** file_content = get_file_content(file_path, &line_count);
     int** requirments = get_plan_requirments(file_content, line_count);
-    int total_sum = 0;
+    int total_sum_1 = 0;
+    int total_sum_2 = 0;
+
+    int present_ribbon = 0;
+    int bow_ribbon = 0;
 
     // print_2d_int_array(requirments, line_count, NUM_NUMBERS_PER_LINE);
 
     for (int i = 0; i < line_count; i++) {
-        printf("[%d] ", i);
-        total_sum += calc_required_wrapping_paper(requirments[i]);
+        // printf("[%d] ", i);
+        // total_sum_1 += calc_required_wrapping_paper(requirments[i]);
+        present_ribbon = calc_required_wrapping_paper_present(requirments[i]);
+        bow_ribbon = calc_required_wrapping_paper_bow(requirments[i]);
+
+        total_sum_2 += calc_together(present_ribbon, bow_ribbon);
     }
 
-    printf("%d", total_sum);
+    printf("%d", total_sum_2);
 
     if (file_content != NULL) {
         for (int i = 0; i < line_count; i++) {
