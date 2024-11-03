@@ -116,6 +116,7 @@ void houses_visited_def(char* buffer, size_t buffer_size,
         houses_all[i] = santa_loc;
     }
 }
+
 void print_coord_array(struct coordinate* array, size_t buffer_size) {
     for (int i = 0; i < buffer_size; i++) {
         printf("%d:%d\n", array[i].x, array[i].y);
@@ -138,13 +139,15 @@ struct coordinate* rm_dups(struct coordinate* array, size_t buffer_size,
     struct coordinate item;
 
     for (size_t i = 1; i < buffer_size + 1; i++) {
-        bool item_duped = false;
+        bool item_duped = 0;
         item = array[i];
 
         for (size_t j = 1; j < buffer_size + 1; j++) {
             if (no_dup_array[j].x == item.x && no_dup_array[j].y == item.y) {
-                item_duped = true;
-                dups_count++;
+                if (!item_duped) {
+                    item_duped = 1;
+                    dups_count++;
+                }
             }
         }
 
@@ -152,14 +155,36 @@ struct coordinate* rm_dups(struct coordinate* array, size_t buffer_size,
             no_dup_array[i - dups_count] = array[i];
     }
 
-    *houses_visited_at_least_once = (buffer_size) + 1 - dups_count;
-    printf("%d=", *houses_visited_at_least_once);
-    // struct coordinate* no_dup_clear_array =
-    //     malloc(sizeof(struct coordinate) * *houses_visited_at_least_once);
-    // for (size_t i = 0; i < *houses_visited_at_least_once; i++) {
-    //     no_dup_clear_array[i] = no_dup_array[i];
-    // }
-    return no_dup_array;
+    *houses_visited_at_least_once = buffer_size + 1 - dups_count;
+    printf("houses_visited_at_least_once = %d; dupes_count = %d\n",
+           *houses_visited_at_least_once, dups_count);
+    struct coordinate* no_dup_clear_array =
+        malloc(sizeof(struct coordinate) * *houses_visited_at_least_once);
+
+    for (size_t i = 0; i < *houses_visited_at_least_once; i++) {
+        no_dup_clear_array[i] = no_dup_array[i];
+    }
+    return no_dup_clear_array;
+}
+
+/// Merge two inited coordinate arrays
+int merge_arrays(struct coordinate* array1, struct coordinate* array2,
+                 size_t buffer_size1, size_t buffer_size2) {
+    struct coordinate* array_merged =
+        malloc(sizeof(struct coordinate) * (buffer_size1 + buffer_size2));
+
+    for (int i = 0; i < buffer_size1; i++) {
+        array_merged[i] = array1[i];
+    }
+    for (int i = 0; i < buffer_size2; i++) {
+        array_merged[i + buffer_size1] = array2[i];
+    }
+
+    // print_coord_array(array_merged, buffer_size1 + buffer_size2);
+    int new_houses_once = 0;
+    rm_dups(array_merged, buffer_size1 + buffer_size2, &new_houses_once);
+
+    return new_houses_once;
 }
 
 int main(void) {
@@ -174,10 +199,20 @@ int main(void) {
     struct coordinate* houses_robo_santa =
         malloc(sizeof(struct coordinate) * (buffer_size / 2 + 1));
 
+    struct coordinate* houses_santa_clear;
+    struct coordinate* houses_robo_santa_clear;
     houses_visited(buffer, buffer_size, houses_santa, houses_robo_santa);
 
-    rm_dups(houses_santa, buffer_size / 2, &santa_visited_at_least_once_count);
+    houses_santa_clear = rm_dups(houses_santa, buffer_size / 2,
+                                 &santa_visited_at_least_once_count);
 
-    // print_coord_array_pair(houses_santa, houses_robo_santa, buffer_size / 2);
+    houses_robo_santa_clear = rm_dups(houses_robo_santa, buffer_size / 2,
+                                      &robo_santa_visited_at_least_once_count);
+
+    int new_houses_once =
+        merge_arrays(houses_santa_clear, houses_robo_santa_clear,
+                     santa_visited_at_least_once_count,
+                     robo_santa_visited_at_least_once_count);
+
     return 0;
 }
