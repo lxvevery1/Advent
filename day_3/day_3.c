@@ -89,7 +89,6 @@ void houses_visited(char* buffer, size_t buffer_size,
     houses_santa[0] = santa_loc;
     houses_robo_santa[0] = robo_santa_loc;
 
-    putchar('\n');
     for (size_t i = 1; i < buffer_size + 1; i++) {
         // part 2: every step now divided into 2 actions -> santa and robo-santa
         // steps
@@ -184,6 +183,7 @@ int merge_arrays(struct coordinate* array1, struct coordinate* array2,
     int new_houses_once = 0;
     rm_dups(array_merged, buffer_size1 + buffer_size2, &new_houses_once);
 
+    free(array_merged);
     return new_houses_once;
 }
 
@@ -214,5 +214,7 @@ int main(void) {
                      santa_visited_at_least_once_count,
                      robo_santa_visited_at_least_once_count);
 
+    free(houses_santa_clear);
+    free(houses_robo_santa_clear);
     return 0;
 }
