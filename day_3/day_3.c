@@ -41,6 +41,7 @@ char* read_input_line(char* file_path, size_t* buffer_size) {
 void houses_visited(char* buffer, size_t buffer_size,
                     struct coordinate* houses_all) {
     struct coordinate santa_loc = {0, 0};
+    struct coordinate robo_santa_loc = {0, 0};
 
     // starting location
     houses_all[0] = santa_loc;
@@ -118,7 +119,7 @@ int main(void) {
     houses_at_least_once =
         rm_dups(houses_all, buffer_size, &visited_at_least_once_count);
 
-    print_coord_array(houses_at_least_once, buffer_size);
+    print_coord_array(houses_at_least_once, visited_at_least_once_count);
     printf("Buffer size: %lu\n", buffer_size);
     printf("Houses_visited_at_least_once: %d\n", visited_at_least_once_count);
     return 0;
