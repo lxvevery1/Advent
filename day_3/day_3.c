@@ -46,7 +46,7 @@
 
 #define FILE_PATH "input.txt"
 
-struct coordinate {
+struct loc {
     int x;
     int y;
 };
@@ -58,7 +58,7 @@ char* read_input_line(char* file_path, size_t* buffer_size) {
     return buffer;
 }
 
-void change_pos(char dir, struct coordinate* santa_loc) {
+void change_pos(char dir, struct loc* santa_loc) {
     switch (dir) {
     case '<':
         santa_loc->x--;
@@ -77,13 +77,12 @@ void change_pos(char dir, struct coordinate* santa_loc) {
     }
 }
 
-void houses_visited(char* buffer, size_t buffer_size,
-                    struct coordinate* houses_santa,
-                    struct coordinate* houses_robo_santa) {
-    struct coordinate start_loc = {0, 0};
+void houses_visited(char* buffer, size_t buffer_size, struct loc* houses_santa,
+                    struct loc* houses_robo_santa) {
+    struct loc start_loc = {0, 0};
 
-    struct coordinate santa_loc = {0, 0};
-    struct coordinate robo_santa_loc = {0, 0};
+    struct loc santa_loc = {0, 0};
+    struct loc robo_santa_loc = {0, 0};
 
     // starting location
     houses_santa[0] = santa_loc;
@@ -103,9 +102,9 @@ void houses_visited(char* buffer, size_t buffer_size,
 }
 
 void houses_visited_def(char* buffer, size_t buffer_size,
-                        struct coordinate* houses_all) {
-    struct coordinate santa_loc = {0, 0};
-    struct coordinate robo_santa_loc = {0, 0};
+                        struct loc* houses_all) {
+    struct loc santa_loc = {0, 0};
+    struct loc robo_santa_loc = {0, 0};
 
     // starting location
     houses_all[0] = santa_loc;
@@ -116,26 +115,25 @@ void houses_visited_def(char* buffer, size_t buffer_size,
     }
 }
 
-void print_coord_array(struct coordinate* array, size_t buffer_size) {
+void print_coord_array(struct loc* array, size_t buffer_size) {
     for (int i = 0; i < buffer_size; i++) {
         printf("%d:%d\n", array[i].x, array[i].y);
     }
 }
 
-void print_coord_array_pair(struct coordinate* array1,
-                            struct coordinate* array2, size_t buffer_size) {
+void print_coord_array_pair(struct loc* array1, struct loc* array2,
+                            size_t buffer_size) {
     for (int i = 0; i < buffer_size; i++) {
         printf("%d:%d :: %d:%d\n", array1[i].x, array1[i].y, array2[i].x,
                array2[i].y);
     }
 }
 
-struct coordinate* rm_dups(struct coordinate* array, size_t buffer_size,
-                           int* houses_visited_at_least_once) {
-    struct coordinate* no_dup_array =
-        malloc(sizeof(struct coordinate) * buffer_size);
+struct loc* rm_dups(struct loc* array, size_t buffer_size,
+                    int* houses_visited_at_least_once) {
+    struct loc* no_dup_array = malloc(sizeof(struct loc) * buffer_size);
     uint dups_count = 0;
-    struct coordinate item;
+    struct loc item;
 
     for (size_t i = 1; i < buffer_size + 1; i++) {
         bool item_duped = 0;
@@ -157,8 +155,8 @@ struct coordinate* rm_dups(struct coordinate* array, size_t buffer_size,
     *houses_visited_at_least_once = buffer_size + 1 - dups_count;
     printf("houses_visited_at_least_once = %d; dupes_count = %d\n",
            *houses_visited_at_least_once, dups_count);
-    struct coordinate* no_dup_clear_array =
-        malloc(sizeof(struct coordinate) * *houses_visited_at_least_once);
+    struct loc* no_dup_clear_array =
+        malloc(sizeof(struct loc) * *houses_visited_at_least_once);
 
     for (size_t i = 0; i < *houses_visited_at_least_once; i++) {
         no_dup_clear_array[i] = no_dup_array[i];
@@ -167,10 +165,10 @@ struct coordinate* rm_dups(struct coordinate* array, size_t buffer_size,
 }
 
 /// Merge two inited coordinate arrays
-int merge_arrays(struct coordinate* array1, struct coordinate* array2,
-                 size_t buffer_size1, size_t buffer_size2) {
-    struct coordinate* array_merged =
-        malloc(sizeof(struct coordinate) * (buffer_size1 + buffer_size2));
+int merge_arrays(struct loc* array1, struct loc* array2, size_t buffer_size1,
+                 size_t buffer_size2) {
+    struct loc* array_merged =
+        malloc(sizeof(struct loc) * (buffer_size1 + buffer_size2));
 
     for (int i = 0; i < buffer_size1; i++) {
         array_merged[i] = array1[i];
@@ -194,13 +192,12 @@ int main(void) {
     size_t buffer_size = 0;
     char* buffer = read_input_line(FILE_PATH, &buffer_size);
 
-    struct coordinate* houses_santa =
-        malloc(sizeof(struct coordinate) * buffer_size / 2);
-    struct coordinate* houses_robo_santa =
-        malloc(sizeof(struct coordinate) * (buffer_size / 2 + 1));
+    struct loc* houses_santa = malloc(sizeof(struct loc) * buffer_size / 2);
+    struct loc* houses_robo_santa =
+        malloc(sizeof(struct loc) * (buffer_size / 2 + 1));
 
-    struct coordinate* houses_santa_clear;
-    struct coordinate* houses_robo_santa_clear;
+    struct loc* houses_santa_clear;
+    struct loc* houses_robo_santa_clear;
     houses_visited(buffer, buffer_size, houses_santa, houses_robo_santa);
 
     houses_santa_clear = rm_dups(houses_santa, buffer_size / 2,
