@@ -90,7 +90,6 @@ void houses_visited(char* buffer, size_t buffer_size, struct loc* houses_santa,
 
     for (size_t i = 1; i < buffer_size + 1; i++) {
         // part 2: every step now divided into 2 actions -> santa and robo-santa
-        // steps
         if (i % 2) {
             change_pos(buffer[i - 1], &santa_loc);
             houses_santa[i / 2 + 1] = santa_loc;
@@ -155,6 +154,7 @@ struct loc* rm_dups(struct loc* array, size_t buffer_size,
     *houses_visited_at_least_once = buffer_size + 1 - dups_count;
     printf("houses_visited_at_least_once = %d; dupes_count = %d\n",
            *houses_visited_at_least_once, dups_count);
+
     struct loc* no_dup_clear_array =
         malloc(sizeof(struct loc) * *houses_visited_at_least_once);
 
@@ -170,10 +170,10 @@ int merge_arrays(struct loc* array1, struct loc* array2, size_t buffer_size1,
     struct loc* array_merged =
         malloc(sizeof(struct loc) * (buffer_size1 + buffer_size2));
 
-    for (int i = 0; i < buffer_size1; i++) {
+    for (size_t i = 0; i < buffer_size1; i++) {
         array_merged[i] = array1[i];
     }
-    for (int i = 0; i < buffer_size2; i++) {
+    for (size_t i = 0; i < buffer_size2; i++) {
         array_merged[i + buffer_size1] = array2[i];
     }
 
@@ -192,12 +192,12 @@ int main(void) {
     size_t buffer_size = 0;
     char* buffer = read_input_line(FILE_PATH, &buffer_size);
 
-    struct loc* houses_santa = malloc(sizeof(struct loc) * buffer_size / 2);
-    struct loc* houses_robo_santa =
-        malloc(sizeof(struct loc) * (buffer_size / 2 + 1));
+    struct loc houses_santa[buffer_size / 2];
+    struct loc houses_robo_santa[buffer_size / 2];
 
     struct loc* houses_santa_clear;
     struct loc* houses_robo_santa_clear;
+
     houses_visited(buffer, buffer_size, houses_santa, houses_robo_santa);
 
     houses_santa_clear = rm_dups(houses_santa, buffer_size / 2,
