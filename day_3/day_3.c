@@ -20,6 +20,26 @@
 //     house at his starting/ending location. ^v^v^v^v^v delivers a bunch of
 //     presents to some very lucky children at only 2 houses.
 
+// --- Part Two ---
+//
+// The next year, to speed up the process, Santa creates a robot version of
+// himself, Robo-Santa, to deliver presents with him.
+//
+// Santa and Robo-Santa start at the same location (delivering two presents to
+// the same starting house), then take turns moving based on instructions from
+// the elf, who is eggnoggedly reading from the same script as the previous
+// year.
+//
+// This year, how many houses receive at least one present?
+//
+// For example:
+//
+//     ^v delivers presents to 3 houses, because Santa goes north, and then
+//     Robo-Santa goes south.
+//     ^>v< now delivers presents to 3 houses, and Santa and Robo-Santa end up
+//     back where they started. ^v^v^v^v^v now delivers presents to 11 houses,
+//     with Santa going one direction and Robo-Santa going the other.
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,8 +58,53 @@ char* read_input_line(char* file_path, size_t* buffer_size) {
     return buffer;
 }
 
+void change_pos(char dir, struct coordinate* santa_loc) {
+    switch (dir) {
+    case '<':
+        santa_loc->x--;
+        break;
+    case '>':
+        santa_loc->x++;
+        break;
+    case 'v':
+        santa_loc->y--;
+        break;
+    case '^':
+        santa_loc->y++;
+        break;
+    default:
+        break;
+    }
+}
+
 void houses_visited(char* buffer, size_t buffer_size,
-                    struct coordinate* houses_all) {
+                    struct coordinate* houses_santa,
+                    struct coordinate* houses_robo_santa) {
+    struct coordinate start_loc = {0, 0};
+
+    struct coordinate santa_loc = {0, 0};
+    struct coordinate robo_santa_loc = {0, 0};
+
+    // starting location
+    houses_santa[0] = santa_loc;
+    houses_robo_santa[0] = robo_santa_loc;
+
+    putchar('\n');
+    for (size_t i = 1; i < buffer_size + 1; i++) {
+        // part 2: every step now divided into 2 actions -> santa and robo-santa
+        // steps
+        if (i % 2) {
+            change_pos(buffer[i - 1], &santa_loc);
+            houses_santa[i / 2 + 1] = santa_loc;
+        } else {
+            change_pos(buffer[i - 1], &robo_santa_loc);
+            houses_robo_santa[i / 2] = robo_santa_loc;
+        }
+    }
+}
+
+void houses_visited_def(char* buffer, size_t buffer_size,
+                        struct coordinate* houses_all) {
     struct coordinate santa_loc = {0, 0};
     struct coordinate robo_santa_loc = {0, 0};
 
@@ -47,30 +112,21 @@ void houses_visited(char* buffer, size_t buffer_size,
     houses_all[0] = santa_loc;
 
     for (size_t i = 1; i < buffer_size + 1; i++) {
-        switch (buffer[i - 1]) {
-        case '<':
-            santa_loc.x--;
-            break;
-        case '>':
-            santa_loc.x++;
-            break;
-        case 'v':
-            santa_loc.y--;
-            break;
-        case '^':
-            santa_loc.y++;
-            break;
-        default:
-            break;
-        }
-
+        change_pos(buffer[i - 1], &santa_loc);
         houses_all[i] = santa_loc;
     }
 }
-
 void print_coord_array(struct coordinate* array, size_t buffer_size) {
     for (int i = 0; i < buffer_size; i++) {
         printf("%d:%d\n", array[i].x, array[i].y);
+    }
+}
+
+void print_coord_array_pair(struct coordinate* array1,
+                            struct coordinate* array2, size_t buffer_size) {
+    for (int i = 0; i < buffer_size; i++) {
+        printf("%d:%d :: %d:%d\n", array1[i].x, array1[i].y, array2[i].x,
+               array2[i].y);
     }
 }
 
@@ -96,31 +152,32 @@ struct coordinate* rm_dups(struct coordinate* array, size_t buffer_size,
             no_dup_array[i - dups_count] = array[i];
     }
 
-    *houses_visited_at_least_once = buffer_size + 1 - dups_count;
-
-    struct coordinate* no_dup_clear_array =
-        malloc(sizeof(struct coordinate) * *houses_visited_at_least_once);
-    for (size_t i = 0; i < *houses_visited_at_least_once; i++) {
-        no_dup_clear_array[i] = no_dup_array[i];
-    }
-    return no_dup_clear_array;
+    *houses_visited_at_least_once = (buffer_size) + 1 - dups_count;
+    printf("%d=", *houses_visited_at_least_once);
+    // struct coordinate* no_dup_clear_array =
+    //     malloc(sizeof(struct coordinate) * *houses_visited_at_least_once);
+    // for (size_t i = 0; i < *houses_visited_at_least_once; i++) {
+    //     no_dup_clear_array[i] = no_dup_array[i];
+    // }
+    return no_dup_array;
 }
 
 int main(void) {
-    int visited_at_least_once_count = 0;
+    int santa_visited_at_least_once_count = 0;
+    int robo_santa_visited_at_least_once_count = 0;
+
     size_t buffer_size = 0;
     char* buffer = read_input_line(FILE_PATH, &buffer_size);
-    struct coordinate* houses_all =
-        malloc(sizeof(struct coordinate) * buffer_size + 1);
-    struct coordinate* houses_at_least_once;
 
-    houses_visited(buffer, buffer_size, houses_all);
+    struct coordinate* houses_santa =
+        malloc(sizeof(struct coordinate) * buffer_size / 2);
+    struct coordinate* houses_robo_santa =
+        malloc(sizeof(struct coordinate) * (buffer_size / 2 + 1));
 
-    houses_at_least_once =
-        rm_dups(houses_all, buffer_size, &visited_at_least_once_count);
+    houses_visited(buffer, buffer_size, houses_santa, houses_robo_santa);
 
-    print_coord_array(houses_at_least_once, visited_at_least_once_count);
-    printf("Buffer size: %lu\n", buffer_size);
-    printf("Houses_visited_at_least_once: %d\n", visited_at_least_once_count);
+    rm_dups(houses_santa, buffer_size / 2, &santa_visited_at_least_once_count);
+
+    // print_coord_array_pair(houses_santa, houses_robo_santa, buffer_size / 2);
     return 0;
 }
