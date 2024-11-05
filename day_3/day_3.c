@@ -92,7 +92,7 @@ void houses_visited(char* buffer, size_t buffer_size, struct loc* houses_santa,
         // part 2: every step now divided into 2 actions -> santa and robo-santa
         if (i % 2) {
             change_pos(buffer[i - 1], &santa_loc);
-            houses_santa[i / 2 + 1] = santa_loc;
+            houses_santa[i / 2] = santa_loc;
         } else {
             change_pos(buffer[i - 1], &robo_santa_loc);
             houses_robo_santa[i / 2] = robo_santa_loc;
@@ -177,7 +177,6 @@ int merge_arrays(struct loc* array1, struct loc* array2, size_t buffer_size1,
         array_merged[i + buffer_size1] = array2[i];
     }
 
-    // print_coord_array(array_merged, buffer_size1 + buffer_size2);
     int new_houses_once = 0;
     rm_dups(array_merged, buffer_size1 + buffer_size2, &new_houses_once);
 
@@ -192,8 +191,9 @@ int main(void) {
     size_t buffer_size = 0;
     char* buffer = read_input_line(FILE_PATH, &buffer_size);
 
-    struct loc houses_santa[buffer_size / 2];
-    struct loc houses_robo_santa[buffer_size / 2];
+    struct loc* houses_santa = malloc(sizeof(struct loc) * buffer_size / 2);
+    struct loc* houses_robo_santa =
+        malloc(sizeof(struct loc) * (buffer_size / 2 + 1));
 
     struct loc* houses_santa_clear;
     struct loc* houses_robo_santa_clear;
