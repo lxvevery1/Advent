@@ -39,6 +39,18 @@ size_t left_rotate(const size_t n, const size_t b) {
     return ((n << b)) | (n >> (32 - b)) & 0xffffffff;
 }
 
+void appendToArray(char** array, size_t* size, char element) {
+    // Increase the size of the array by 1
+    (*size)++;
+
+    // Reallocate memory for the new size
+    *array = realloc(*array, (*size) * sizeof(char));
+
+    // Append the element to the end of the array
+    (*array)[(*size) - 1] = element;
+}
+// 150f15e73422e0a5ba5b59f997fc2350
+// 66661000000000000000000000000000000000000000000000000000
 char* md5_hash(const char* message) {
     const int ml = strlen(message); // message lenght
 
@@ -47,7 +59,7 @@ char* md5_hash(const char* message) {
     strcpy(me, message);
 
     for (int i = 0; i < ml; i++) {
-        printf("%x, ", me[i]);
+        printf("%c", me[i]);
     }
     putchar('\n');
 
@@ -57,25 +69,19 @@ char* md5_hash(const char* message) {
     const int d0 = 0x10325476;
 
     // add count
-    size_t ac = 0;
-    while (strlen(me) % 64 != 56) {
-        char* temp = realloc(me, sizeof(char) * (ml + 1 + ac + 1));
-        if (temp == NULL) {
-            fprintf(stderr, "Memory reallocation failed\n");
-            free(me); // Free the original memory block if realloc fails
-            return NULL;
-        }
-        me = temp;
-        me[ml + ac] = 0;
-        ac++;
+    size_t me_l = ml;
+    appendToArray(&me, &me_l, 8);
+    while (me_l % 64 != 56) {
+        appendToArray(&me, &me_l, 0x00);
     }
+    printf("\n%lu\n", me_l);
 
-    me[ml + ac] = '\0';
-    // for (int i = 0; i < message_lenght; i++) {
-    //     printf("%x, ", me[i]);
-    // }
-    // putchar('\n');
+    me[me_l] = '\0';
 
+    for (int i = 0; i < me_l; i++) {
+        printf("%x", me[i]);
+    }
+    putchar('\n');
     return me;
 }
 
