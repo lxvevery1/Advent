@@ -1,9 +1,8 @@
+# Пример использования:
 import hashlib
 import math
 
-# Пример использования:
-
-message = "aboba"
+message = "Hello, world!"
 result = hashlib.md5(message.encode()).hexdigest()
 print("MD5 хэш (hashlib):", result)
 
@@ -29,8 +28,6 @@ def md5(message):
     message.append(0x80)
     while len(message) % 64 != 56:
         message.append(0x00)
-
-    print(len(message))
     message.extend(length.to_bytes(8, byteorder="little"))
 
     # Process message in 16-word blocks
@@ -69,15 +66,13 @@ def md5(message):
         B = (B + B_) & 0xFFFFFFFF
         C = (C + C_) & 0xFFFFFFFF
         D = (D + D_) & 0xFFFFFFFF
-        print(X)
 
-    #
-    # # Output
-    # result = bytearray(A.to_bytes(4, byteorder="little"))
-    # result.extend(B.to_bytes(4, byteorder="little"))
-    # result.extend(C.to_bytes(4, byteorder="little"))
-    # result.extend(D.to_bytes(4, byteorder="little"))
-    return message.hex()
+    # Output
+    result = bytearray(A.to_bytes(4, byteorder="little"))
+    result.extend(B.to_bytes(4, byteorder="little"))
+    result.extend(C.to_bytes(4, byteorder="little"))
+    result.extend(D.to_bytes(4, byteorder="little"))
+    return result.hex()
 
 
 result = md5(message.encode())
