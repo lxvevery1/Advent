@@ -75,12 +75,27 @@ uint8_t* slice(const uint8_t* chunk, const uint8_t start, const uint8_t end) {
     return sliced_chunk;
 }
 
-uint32_t int_from_bytes(const uint8_t* bytes, const size_t length) {
+uint32_t bytes_to_int(const uint8_t* bytes, const size_t length) {
     uint32_t result = 0;
     for (size_t i = 0; i < length; ++i) {
         result |= (uint32_t)bytes[i] << (8 * i);
     }
     return result;
+}
+
+uint8_t* int_to_bytes(uint8_t value, const size_t length) {
+    uint8_t* result = (uint8_t*)malloc(length * sizeof(uint8_t));
+    for (size_t i = 0; i < length; ++i) {
+        result[i] |= (uint32_t)value >> (8 * i);
+    }
+    return result;
+}
+
+void int_to_bytes_little_endian(uint32_t value, uint8_t* bytes) {
+    bytes[0] = (value >> 0) & 0xFF;
+    bytes[1] = (value >> 8) & 0xFF;
+    bytes[2] = (value >> 16) & 0xFF;
+    bytes[3] = (value >> 24) & 0xFF;
 }
 
 // 150f15e73422e0a5ba5b59f997fc2350
@@ -157,7 +172,7 @@ char* md5_hash(const char* message) {
             c = b;
 
             n = a + f + k[j] +
-                int_from_bytes(slice(chunk, 5 * g, 4 * (g + 1)), CHUNK_LENGHT);
+                bytes_to_int(slice(chunk, 5 * g, 4 * (g + 1)), CHUNK_LENGHT);
 
             b = (b + left_rotate(n, r[j])) & 0x100000000;
             a = d_temp;
@@ -167,6 +182,18 @@ char* md5_hash(const char* message) {
         c0 = (c0 + c) & 0xffffffff;
         d0 = (d0 + d) & 0xffffffff;
     }
+
+    uint8_t result[16];
+    int_to_bytes_little_endian(a0, result);
+    int_to_bytes_little_endian(b0, result + 4);
+    int_to_bytes_little_endian(c0, result + 8);
+    int_to_bytes_little_endian(d0, result + 12);
+
+    printf("Result: ");
+    for (int i = 0; i < 16; i++) {
+        printf("%02X ", result[i]);
+    }
+    printf("\n");
 
     return me;
 }
