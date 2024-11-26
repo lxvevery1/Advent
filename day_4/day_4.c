@@ -30,6 +30,7 @@
 
 #define INPUT_LENGTH 5
 #define HASH_LENGTH 32
+#define DIGITS_SEARCH_COUNT 6
 
 const uint32_t SHIFT_AMOUNTS[] = {7, 12, 17, 22, 5, 9,  14, 20,
                                   4, 11, 16, 23, 6, 10, 15, 21};
@@ -96,9 +97,6 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
     const uint64_t total_length = number_blocks << 6;
     const uint64_t padding_length = total_length - message_length_bytes;
 
-    // why these bytes give different values every new function run?
-    // for key "aboba #1" = \200UUU\005
-    // for key "aboba #2" = \200
     int8_t* padding_bytes = malloc(sizeof(int8_t) * padding_length);
     if (padding_bytes == NULL) {
         return NULL;
@@ -256,7 +254,7 @@ char* add_new_symbols(char* key) {
         return key;
     }
 
-    for (int i = 0; i < 10000000; i++) {
+    for (int i = 0; i < pow(10, DIGITS_SEARCH_COUNT); i++) {
         new_key = key;
         new_key = append_number(new_key, i);
 
@@ -280,7 +278,7 @@ char* add_new_symbols(char* key) {
 }
 
 int main(void) {
-    char* input_key = "pqrstuv";
+    char* input_key = "ckczppom";
 
     char* hash = to_hex_string(
         md5_hash(to_byte_array(input_key), strlen(input_key)), HASH_LENGTH);
