@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <bit>
 #include <cstdint>
 #include <iomanip>
 #include <iostream>

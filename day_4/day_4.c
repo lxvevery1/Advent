@@ -22,12 +22,14 @@
 // 1. How to generate MD5 HASH from some secret key
 // 2. How to generate append number, that transforms secret key so the result of
 // hashing starts with '00000' So the main question is how to ge
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define INPUT_LENGHT 5
+#define INPUT_LENGTH 5
+#define HASH_LENGTH 32
 
 const uint32_t SHIFT_AMOUNTS[] = {7, 12, 17, 22, 5, 9,  14, 20,
                                   4, 11, 16, 23, 6, 10, 15, 21};
@@ -47,96 +49,36 @@ const uint32_t K[] = {
 
 size_t left_rotate(const size_t n, const size_t b) {
     const size_t rotation = ((n << b)) | (n >> (32 - b)) & 0xffffffff;
-    // printf("n:%zu b: %zu\n", n, b);
-    // printf("n << b = %zu\n", n << b);
-    // printf("n >> (32 - b) = %zu\n", n >> (32 - b));
-    // printf("n << b | n >> (32 - b) = %zu\n", (n << b) | (n >> (32 - b)));
-    // printf("n << b | n >> (32 - b) & 0xffffffff = %zu\n", rotation);
     return rotation;
 }
 
-void append_to_array(char** array, size_t* size, const char element) {
-    // Increase the size of the array by 1
-    (*size)++;
-
-    // Reallocate memory for the new size
-    *array = realloc(*array, (*size) * sizeof(char));
-
-    // Append the element to the end of the array
-    (*array)[(*size) - 1] = element;
-}
-
-uint8_t* slice(const uint8_t* chunk, const uint8_t start, const uint8_t end) {
-    // printf("chunk size=%lu  ", sizeof(chunk));
-    // printf("start=%d    ", start);
-    // printf("end=%d  ", end);
-
-    const uint8_t SLICED_LENGHT = end - start;
-
-    // printf("SLICED_LENGHT=%d \n", SLICED_LENGHT);
-
-    if (SLICED_LENGHT < 0) {
-        printf("ERROR: end - start=%d", SLICED_LENGHT);
-    }
-
-    // allocate memory
-    uint8_t* sliced_chunk =
-        (uint8_t*)malloc((SLICED_LENGHT) * (sizeof(uint8_t)));
-
-    // assign sliced chunk
-    for (uint i = 0; i < SLICED_LENGHT; i++) {
-        sliced_chunk[i] = chunk[start + i];
-    }
-
-    return sliced_chunk;
-}
-
-uint32_t bytes_to_int(const uint8_t* bytes, const size_t length) {
-    uint32_t result = 0;
-    for (size_t i = 0; i < length; ++i) {
-        result |= (uint32_t)bytes[i] << (8 * i);
-    }
-    return result;
-}
-
-uint8_t* int_to_bytes(uint8_t value, const size_t length) {
-    uint8_t* result = (uint8_t*)malloc(length * sizeof(uint8_t));
-    for (size_t i = 0; i < length; ++i) {
-        result[i] |= (uint32_t)value >> (8 * i);
-    }
-    return result;
-}
-
-void int_to_bytes_little_endian(uint32_t value, uint8_t* bytes) {
-    bytes[0] = (value >> 0) & 0xFF;
-    bytes[1] = (value >> 8) & 0xFF;
-    bytes[2] = (value >> 16) & 0xFF;
-    bytes[3] = (value >> 24) & 0xFF;
-}
-
 char* to_hex_string(const int8_t* bytes, const size_t length) {
-    // Each byte will be represented by 2 hex characters + 1 for null terminator
-    char* hex_string = (char*)malloc((length * 2 + 1) * sizeof(char));
+    char* hex_string = malloc(length * 2 * sizeof(char) + 1);
     if (hex_string == NULL) {
-        return NULL; // Handle malloc failure
+        return NULL;
     }
 
-    const char* hex_chars = "0123456789abcdef";
-    for (size_t i = 0; i < length; ++i) {
-        hex_string[i * 2] = hex_chars[(bytes[i] >> 4) & 0x0F];
-        hex_string[i * 2 + 1] = hex_chars[bytes[i] & 0x0F];
+    for (uint32_t i = 0; i < length; ++i) {
+        sprintf(&hex_string[i * 2], "%02x", (unsigned char)bytes[i]);
     }
-    hex_string[length * 2] = '\0'; // Null-terminate the string
 
-    return hex_string;
+    char* hex_string_32 = realloc(hex_string, length * sizeof(char));
+
+    hex_string_32[length] = '\0';
+    if (hex_string_32 == NULL) {
+        free(hex_string);
+        return NULL;
+    }
+
+    return hex_string_32;
 }
 
 int8_t* to_byte_array(const char* text) {
     int32_t text_length = strlen(text);
     int8_t* bytes = malloc(sizeof(int8_t) * text_length);
-
-    if (bytes == NULL)
+    if (bytes == NULL) {
         return NULL;
+    }
 
     for (uint32_t i = 0; i < text_length; i++) {
         bytes[i] = (int8_t)text[i];
@@ -147,15 +89,19 @@ int8_t* to_byte_array(const char* text) {
 // 150f15e73422e0a5ba5b59f997fc2350
 // 66661000000000000000000000000000000000000000000000000000
 int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
-    const int LENGTH = 64;
-    const int CHUNK_LENGTH = LENGTH / 4;
-
     const uint64_t message_length_bytes = message_length;
     const uint64_t number_blocks = ((message_length_bytes + 8) >> 6) + 1;
     const uint64_t total_length = number_blocks << 6;
     const uint64_t padding_length = total_length - message_length_bytes;
 
-    int8_t* padding_bytes = malloc(sizeof(int8_t) * padding_length);
+    printf("message=");
+    for (int i = 0; i < message_length; i++) {
+        printf("%c", message[i]);
+    }
+    putchar('\n');
+
+    int8_t padding_bytes[padding_length];
+
     padding_bytes[0] = (int8_t)0x80;
     uint64_t message_length_bits = message_length_bytes << 3;
 
@@ -170,6 +116,10 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
     uint32_t d0 = 0x10325476;
 
     uint32_t* buffer = malloc(sizeof(uint32_t) * 16);
+    if (buffer == NULL) {
+        return NULL;
+    }
+
     for (uint32_t i = 0; i < number_blocks; ++i) {
         uint32_t index = i << 6;
         for (uint32_t j = 0; j < 64; index++, ++j) {
@@ -221,8 +171,13 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
         c0 += original_C;
         d0 += original_D;
     }
+    free(buffer);
 
     int8_t* md5 = malloc(sizeof(int8_t) * 16);
+    if (md5 == NULL) {
+        return NULL;
+    }
+
     uint32_t count = 0;
     for (uint32_t i = 0; i < 4; ++i) {
         uint32_t n = (i == 0) ? a0 : ((i == 1) ? b0 : ((i == 2) ? c0 : d0));
@@ -232,19 +187,115 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
         }
     }
 
+    printf("md5=");
+    for (uint32_t i = 0; i < 32; i++) {
+        printf("%d", md5[i]);
+    }
+    putchar('\n');
+    putchar('\n');
     return md5;
 }
 
-int main(void) {
-    char* input_key = malloc(sizeof(char) * INPUT_LENGHT);
-    input_key = "aboba";
-    char* hash = to_hex_string(
-        md5_hash(to_byte_array(input_key), strlen(input_key)), 32);
-
-    for (size_t i = 0; i < 32; i++) {
-        printf("%c", hash[i]);
+// return 1 if string contains 5 zeroes as it first elements in row
+// and 0 else
+int zeroes_check(char* string) {
+    if (string == NULL) {
+        printf("passed string is null\n");
+        return 0;
     }
-    putchar('\n');
 
+    const uint32_t zeroes_to_count = 5;
+    uint32_t zeroes_count = 0;
+    const uint32_t str_len = strlen(string);
+    if (str_len < zeroes_to_count) {
+        printf("string lenght %u < %d", str_len, zeroes_to_count);
+        return 0;
+    }
+
+    for (uint32_t i = 0; i < zeroes_to_count; i++) {
+        if (string[i] == '0') {
+            zeroes_count++;
+        }
+        if (zeroes_count == 5) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// appends a number to string
+char* append_number(const char* string, const uint32_t number) {
+    const uint32_t str_len = strlen(string);
+    const uint32_t digits_count = (int)log10(number) + 1;
+    char* new_string = malloc(sizeof(char) * (str_len + digits_count));
+    char* str_number = malloc(sizeof(char) * digits_count);
+
+    for (uint32_t i = 0; i < str_len; i++) {
+        new_string[i] = string[i];
+    }
+
+    sprintf(str_number, "%d", number);
+
+    for (uint32_t i = 0; i < digits_count; i++) {
+        new_string[str_len + i] = str_number[i];
+    }
+
+    free(str_number);
+    return new_string;
+}
+
+// Second part: algorithm, that adds (10) symbols after input_key
+// and checks if it have the new hash 5 zeroes before it
+// after that, find minimal hash with that 00000xxxxx type of value
+char* add_new_symbols(char* key) {
+    const uint32_t key_length = strlen(key);
+    uint32_t index_last = key_length;
+    char* hash = malloc(sizeof(char) * HASH_LENGTH);
+    if (hash == NULL) {
+        return key;
+    }
+    char* new_key = malloc(sizeof(char) * key_length + 6); // +1 is new element
+    if (new_key == NULL) {
+        return key;
+    }
+
+    for (int i = 0; i < 609044; i++) {
+        new_key = key;
+        new_key = append_number(new_key, i);
+
+        hash = to_hex_string(md5_hash(to_byte_array(new_key), strlen(new_key)),
+                             HASH_LENGTH);
+
+        if (zeroes_check(new_key)) {
+            printf("Key, that generates five zeroes in hash code of key %s "
+                   "found, it = %s\n",
+                   key, new_key);
+            return new_key;
+        }
+
+        printf("\n%s => %s\n", new_key, hash);
+    }
+
+    printf("Key not found\n");
+    free(hash);
+    free(new_key);
+    return key;
+}
+
+int main(void) {
+    char* input_key = "aboba";
+
+    char* hash = to_hex_string(
+        md5_hash(to_byte_array(input_key), strlen(input_key)), HASH_LENGTH);
+
+    // printf("%s\n", hash);
+
+    hash = to_hex_string(md5_hash(to_byte_array(input_key), strlen(input_key)),
+                         HASH_LENGTH);
+
+    // add_new_symbols(input_key);
+
+    putchar('\n');
+    free(hash);
     return 0;
 }
