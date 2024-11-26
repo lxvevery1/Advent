@@ -86,8 +86,10 @@ int8_t* to_byte_array(const char* text) {
     return bytes;
 }
 
-// 150f15e73422e0a5ba5b59f997fc2350
-// 66661000000000000000000000000000000000000000000000000000
+// message = aboba
+// hash = 150f15e73422e0a5ba5b59f997fc2350
+// md5 = 211521-255234-32-91-709189-7-105-4358000000000-1278200000
+
 int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
     const uint64_t message_length_bytes = message_length;
     const uint64_t number_blocks = ((message_length_bytes + 8) >> 6) + 1;
@@ -100,7 +102,13 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
     }
     putchar('\n');
 
-    int8_t padding_bytes[padding_length];
+    // why these bytes give different values every new function run?
+    // for key "aboba #1" = \200UUU\005
+    // for key "aboba #2" = \200
+    int8_t* padding_bytes = malloc(sizeof(int8_t) * padding_length);
+    if (padding_bytes == NULL) {
+        return NULL;
+    }
 
     padding_bytes[0] = (int8_t)0x80;
     uint64_t message_length_bits = message_length_bytes << 3;
@@ -109,6 +117,12 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
         padding_bytes[padding_length - 8 + i] = (int8_t)message_length_bits;
         message_length_bits >>= 8;
     }
+
+    printf("padding_bytes: ");
+    for (uint32_t i = 0; i < padding_length; i++) {
+        printf("%d", padding_bytes[i]);
+    }
+    putchar('\n');
 
     uint32_t a0 = 0x67452301;
     uint32_t b0 = 0xefcdab89;
@@ -172,6 +186,7 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
         d0 += original_D;
     }
     free(buffer);
+    // free(padding_bytes);
 
     int8_t* md5 = malloc(sizeof(int8_t) * 16);
     if (md5 == NULL) {
@@ -193,6 +208,7 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
     }
     putchar('\n');
     putchar('\n');
+
     return md5;
 }
 
@@ -254,19 +270,19 @@ char* add_new_symbols(char* key) {
     if (hash == NULL) {
         return key;
     }
-    char* new_key = malloc(sizeof(char) * key_length + 6); // +1 is new element
+    char* new_key = malloc(sizeof(char) * key_length + 6); // +6 is new element
     if (new_key == NULL) {
         return key;
     }
 
-    for (int i = 0; i < 609044; i++) {
+    for (int i = 0; i < 1000000; i++) {
         new_key = key;
         new_key = append_number(new_key, i);
 
         hash = to_hex_string(md5_hash(to_byte_array(new_key), strlen(new_key)),
                              HASH_LENGTH);
 
-        if (zeroes_check(new_key)) {
+        if (zeroes_check(hash)) {
             printf("Key, that generates five zeroes in hash code of key %s "
                    "found, it = %s\n",
                    key, new_key);
@@ -289,13 +305,20 @@ int main(void) {
         md5_hash(to_byte_array(input_key), strlen(input_key)), HASH_LENGTH);
 
     // printf("%s\n", hash);
+    //
+    // hash = to_hex_string(
+    //     md5_hash(to_byte_array("abcdef609043"), strlen("abcdef609043")),
+    //     HASH_LENGTH);
 
-    hash = to_hex_string(md5_hash(to_byte_array(input_key), strlen(input_key)),
-                         HASH_LENGTH);
+    // printf("%s\n", hash);
+    // hash = to_hex_string(md5_hash(to_byte_array(input_key),
+    // strlen(input_key)),
+    //                      HASH_LENGTH);
 
-    // add_new_symbols(input_key);
+    char* new_key = add_new_symbols(input_key);
 
     putchar('\n');
     free(hash);
+    free(new_key);
     return 0;
 }
