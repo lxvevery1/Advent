@@ -96,12 +96,6 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
     const uint64_t total_length = number_blocks << 6;
     const uint64_t padding_length = total_length - message_length_bytes;
 
-    printf("message=");
-    for (int i = 0; i < message_length; i++) {
-        printf("%c", message[i]);
-    }
-    putchar('\n');
-
     // why these bytes give different values every new function run?
     // for key "aboba #1" = \200UUU\005
     // for key "aboba #2" = \200
@@ -117,12 +111,6 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
         padding_bytes[padding_length - 8 + i] = (int8_t)message_length_bits;
         message_length_bits >>= 8;
     }
-
-    printf("padding_bytes: ");
-    for (uint32_t i = 0; i < padding_length; i++) {
-        printf("%d", padding_bytes[i]);
-    }
-    putchar('\n');
 
     uint32_t a0 = 0x67452301;
     uint32_t b0 = 0xefcdab89;
@@ -202,13 +190,6 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
         }
     }
 
-    printf("md5=");
-    for (uint32_t i = 0; i < 32; i++) {
-        printf("%d", md5[i]);
-    }
-    putchar('\n');
-    putchar('\n');
-
     return md5;
 }
 
@@ -275,7 +256,7 @@ char* add_new_symbols(char* key) {
         return key;
     }
 
-    for (int i = 0; i < 1000000; i++) {
+    for (int i = 0; i < 10000000; i++) {
         new_key = key;
         new_key = append_number(new_key, i);
 
@@ -289,7 +270,7 @@ char* add_new_symbols(char* key) {
             return new_key;
         }
 
-        printf("\n%s => %s\n", new_key, hash);
+        // printf("\n%s => %s\n", new_key, hash);
     }
 
     printf("Key not found\n");
@@ -299,7 +280,7 @@ char* add_new_symbols(char* key) {
 }
 
 int main(void) {
-    char* input_key = "aboba";
+    char* input_key = "pqrstuv";
 
     char* hash = to_hex_string(
         md5_hash(to_byte_array(input_key), strlen(input_key)), HASH_LENGTH);
