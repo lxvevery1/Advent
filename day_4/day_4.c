@@ -30,7 +30,7 @@
 
 #define INPUT_LENGTH 5
 #define HASH_LENGTH 32
-#define DIGITS_SEARCH_COUNT 6
+#define DIGITS_SEARCH_COUNT 8
 
 const uint32_t SHIFT_AMOUNTS[] = {7, 12, 17, 22, 5, 9,  14, 20,
                                   4, 11, 16, 23, 6, 10, 15, 21};
@@ -172,7 +172,6 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
         d0 += original_D;
     }
     free(buffer);
-    // free(padding_bytes);
 
     int8_t* md5 = malloc(sizeof(int8_t) * 16);
     if (md5 == NULL) {
@@ -191,7 +190,7 @@ int8_t* md5_hash(const int8_t* message, const uint8_t message_length) {
     return md5;
 }
 
-// return 1 if string contains 5 zeroes as it first elements in row
+// return 1 if string contains 6 zeroes as it first elements in row
 // and 0 else
 int zeroes_check(char* string) {
     if (string == NULL) {
@@ -199,7 +198,7 @@ int zeroes_check(char* string) {
         return 0;
     }
 
-    const uint32_t zeroes_to_count = 5;
+    const uint32_t zeroes_to_count = 6;
     uint32_t zeroes_count = 0;
     const uint32_t str_len = strlen(string);
     if (str_len < zeroes_to_count) {
@@ -211,7 +210,7 @@ int zeroes_check(char* string) {
         if (string[i] == '0') {
             zeroes_count++;
         }
-        if (zeroes_count == 5) {
+        if (zeroes_count == zeroes_to_count) {
             return 1;
         }
     }
@@ -267,8 +266,6 @@ char* add_new_symbols(char* key) {
                    key, new_key);
             return new_key;
         }
-
-        // printf("\n%s => %s\n", new_key, hash);
     }
 
     printf("Key not found\n");
@@ -282,17 +279,6 @@ int main(void) {
 
     char* hash = to_hex_string(
         md5_hash(to_byte_array(input_key), strlen(input_key)), HASH_LENGTH);
-
-    // printf("%s\n", hash);
-    //
-    // hash = to_hex_string(
-    //     md5_hash(to_byte_array("abcdef609043"), strlen("abcdef609043")),
-    //     HASH_LENGTH);
-
-    // printf("%s\n", hash);
-    // hash = to_hex_string(md5_hash(to_byte_array(input_key),
-    // strlen(input_key)),
-    //                      HASH_LENGTH);
 
     char* new_key = add_new_symbols(input_key);
 
