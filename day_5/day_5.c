@@ -125,6 +125,9 @@ uint8_t repeat_between(char* string) {
 }
 
 int count_lines_in_file(const char* filename) {
+    if (filename == NULL) {
+        return 0;
+    }
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         perror("Error opening file");
@@ -188,6 +191,9 @@ char** read_words_from_file(const char* filename, uint32_t lines) {
 }
 
 _Bool isNice(char* word) {
+    if (word == NULL) {
+        return 0;
+    }
     uint8_t contains_pair = contains_pair_letters(word);
     uint8_t repeat_btw = repeat_between(word); // 429
 
