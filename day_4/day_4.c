@@ -49,7 +49,7 @@ const uint32_t K[] = {
     0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391};
 
 size_t left_rotate(const size_t n, const size_t b) {
-    const size_t rotation = ((n << b)) | (n >> (32 - b)) & 0xffffffff;
+    const size_t rotation = ((n << b)) | ((n >> (32 - b)) & 0xffffffff);
     return rotation;
 }
 
@@ -243,7 +243,6 @@ char* append_number(const char* string, const uint32_t number) {
 // after that, find minimal hash with that 00000xxxxx type of value
 char* add_new_symbols(char* key) {
     const uint32_t key_length = strlen(key);
-    uint32_t index_last = key_length;
     char* hash = malloc(sizeof(char) * HASH_LENGTH);
     if (hash == NULL) {
         return key;
@@ -264,6 +263,7 @@ char* add_new_symbols(char* key) {
             printf("Key, that generates five zeroes in hash code of key %s "
                    "found, it = %s\n",
                    key, new_key);
+            free(hash);
             return new_key;
         }
     }
@@ -284,6 +284,7 @@ int main(void) {
 
     putchar('\n');
     free(hash);
-    free(new_key);
+    if (input_key != new_key)
+        free(new_key);
     return 0;
 }
