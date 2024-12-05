@@ -23,6 +23,32 @@
 //
 // How many strings are nice?
 
+// --- Part Two ---
+//
+// Realizing the error of his ways, Santa has switched to a better model of
+// determining whether a string is naughty or nice. None of the old rules apply,
+// as they are all clearly ridiculous.
+//
+// Now, a nice string is one with all of the following properties:
+//
+//     It contains a pair of any two letters that appears at least twice in the
+//     string without overlapping, like xyxy (xy) or aabcdefgaa (aa), but not
+//     like aaa (aa, but it overlaps). It contains at least one letter which
+//     repeats with exactly one letter between them, like xyx, abcdefeghi (efe),
+//     or even aaa.
+//
+// For example:
+//
+//     qjhvhtzxzqqjkmpb is nice because is has a pair that appears twice (qj)
+//     and a letter that repeats with exactly one letter between them (zxz).
+//     xxyxx is nice because it has a pair that appears twice and a letter that
+//     repeats with one between, even though the letters used by each rule
+//     overlap. uurcxstgmygtbstg is naughty because it has a pair (tg) but no
+//     repeat with a single letter between them. ieodomkazucvgmuy is naughty
+//     because it has a repeating letter with one between (odo), but no pair
+//     that appears twice.
+//
+// How many strings are nice under these new rules?
 // puzzle input in input.txt
 
 #include <stdint.h>
@@ -34,74 +60,67 @@
 #define MAX_WORD_LENGTH 18
 
 size_t buffer_size = 0;
-uint32_t left_parentheses = 0;
-uint32_t right_parentheses = 0;
 
 char* read_input(char* file_path) {
     FILE* fp = fopen(file_path, "r");
     char* buffer = NULL;
     getline(&buffer, &buffer_size, fp);
 
-    // fclose(fp);
+    fclose(fp);
     return buffer;
 }
 
-uint8_t contains_vowels(char* string) {
+uint8_t contains_pair_letters(char* string) {
     if (string == NULL) {
         return 0;
     }
+    uint32_t str_len = strlen(string);
+    if (str_len < 4) {
+        return 0;
+    }
 
-    char eng_vow[5] = {'a', 'e', 'i', 'o', 'u'};
-    uint32_t vow_max = 3;
-    uint32_t vow_cnt = 0;
+    char curr_pair[2];
+    char check_pair[2];
+    for (uint32_t i = 0; i < str_len - 1; i++) {
+        curr_pair[0] = string[i];
+        curr_pair[1] = string[i + 1];
 
-    for (uint32_t i = 0; i < strlen(string); i++) {
-        for (uint32_t j = 0; j < 6; j++) {
-            if (string[i] == eng_vow[j]) {
-                vow_cnt++;
+        for (uint32_t j = 0; j < str_len - 1; j++) {
+            check_pair[0] = string[j];
+            check_pair[1] = string[j + 1];
+
+            if (i != j && j + 1 != i && i + 1 != j) {
+                if (curr_pair[0] == check_pair[0] &&
+                    curr_pair[1] == check_pair[1]) {
+                    printf("%s: %c%c == %c%c\n", string, curr_pair[0],
+                           curr_pair[1], check_pair[0], check_pair[1]);
+                    return 1;
+                }
             }
         }
-    }
-
-    return vow_cnt >= vow_max;
-}
-
-uint8_t contains_double_letter(char* string) {
-    if (string == NULL) {
-        return 0;
-    }
-
-    char prev_letter = string[0];
-
-    for (uint32_t i = 1; i < strlen(string); i++) {
-        if (string[i] == prev_letter) {
-            return 1;
-        }
-
-        prev_letter = string[i];
     }
 
     return 0;
 }
 
-uint8_t contains_bl_strings(char* string) {
+uint8_t repeat_between(char* string) {
     if (string == NULL) {
         return 0;
     }
-
-    const char* bl_strings[4] = {"ab", "cd", "pq", "xy"};
-
-    char prev_letter = string[0];
-    for (uint32_t i = 1; i < strlen(string); i++) {
-        for (uint32_t j = 0; j < 4; j++) {
-            if ((string[i] == bl_strings[j][1]) &&
-                (prev_letter == bl_strings[j][0])) {
-                return 1;
-            }
-        }
-        prev_letter = string[i];
+    uint32_t str_len = strlen(string);
+    if (str_len < 3) {
+        return 0;
     }
 
+    char prev_char = string[0];
+    for (uint32_t i = 1; i < str_len - 1; i++) {
+        if (prev_char == string[i + 1]) {
+            printf("%s -> %c%c%c\n", string, prev_char, string[i],
+                   string[i + 1]);
+            return 1;
+        }
+        prev_char = string[i];
+    }
     return 0;
 }
 
@@ -168,36 +187,23 @@ char** read_words_from_file(const char* filename, uint32_t lines) {
     return words;
 }
 
-int isNice(char* word) {
-    uint8_t cont_vow = contains_vowels(word);
-    uint8_t cont_doub = contains_double_letter(word);
-    uint8_t cont_bl = contains_bl_strings(word);
+_Bool isNice(char* word) {
+    uint8_t contains_pair = contains_pair_letters(word);
+    uint8_t repeat_btw = repeat_between(word); // 429
 
-    printf("[%d::%d::%d] -> %s\n", cont_vow, cont_doub, !cont_bl, word);
-    return cont_vow && cont_doub && !cont_bl;
+    // printf("[%d::%d] -> %s\n", contains_pair, repeat_btw, word);
+    return repeat_btw && contains_pair;
 }
 
 int main(void) {
     uint32_t lines_cnt = count_lines_in_file(INPUT_FILE_NAME);
     char** buffer = read_words_from_file(INPUT_FILE_NAME, lines_cnt);
 
-    uint8_t cont_vow = 0;
-    uint8_t cont_doub = 0;
-    uint8_t cont_bl = 0;
     uint8_t nice_count = 0;
 
     for (uint32_t i = 0; i < lines_cnt; i++) {
-        if (isNice(buffer[i])) {
-            nice_count++;
-        }
+        nice_count += isNice(buffer[i]);
     }
-    printf("Nice words count = %d\n", nice_count);
-
-    // isNice("ugknbfddgicrmopn");
-    // isNice("aaa");
-    // isNice("jchzalrnumimnmhp");
-    // isNice("haegwjzuvuyypxyu");
-    // isNice("dvszwmarrgswjxmb");
-
+    printf("\nNice words count = %d\n", nice_count);
     return 0;
 }
